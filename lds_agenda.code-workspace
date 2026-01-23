@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": ".",
+		},
+	],
+	"settings": {
+		"files.trimTrailingWhitespace": false,
+		"files.insertFinalNewline": false,
+		"editor.fontSize": 18,
+		"editor.formatOnSave": false,
+		"editor.insertSpaces": true,
+		"editor.tabSize": 2,
+	},
+}

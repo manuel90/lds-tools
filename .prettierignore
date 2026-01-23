@@ -1,0 +1,5 @@
+# 1. Ignore everything in the root
+#/*
+
+# 2. Specifically un-ignore the app folder
+#!/app
