@@ -28,6 +28,9 @@ jobs:
         run: |
           echo "API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY"
           echo "PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID"
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
 
 
       - name: Build site
