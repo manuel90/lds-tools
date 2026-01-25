@@ -195,9 +195,12 @@ export function getAssetPath(path: string) {
 	return `${base}${path.startsWith("/") ? "" : "/"}${path}`;
 }
 
-export function isFirstSundayOfMonth() {
-	const day = new Date().getDay(); // 0 = Sunday
-	const dateOfMonth = new Date().getDate();
+export function isNextSundayFirstOfMonth() {
+	const nextCalendarSunday = new Date();
 
-	return day === 0 && dateOfMonth <= 7;
+	const day = nextCalendarSunday.getDay(); // 0 = Sunday
+	const daysToAdd = day === 0 ? 0 : 7 - day;
+
+	nextCalendarSunday.setDate(nextCalendarSunday.getDate() + daysToAdd);
+	return nextCalendarSunday.getDate() === 1;
 }

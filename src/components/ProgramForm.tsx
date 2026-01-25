@@ -17,7 +17,7 @@ import {
 import {
 	fillAgendaPdf,
 	getNextSundayFormatted,
-	isFirstSundayOfMonth,
+	isNextSundayFirstOfMonth,
 } from "@/utils/fillAgendaPdf";
 
 import { ProgramFormData } from "@/interfaces";
@@ -28,7 +28,7 @@ const agendaStore = createFirestoreStore();
 
 const ProgramForm: React.FC = () => {
 	const [isFastTestimonyMeeting, setIsFastTestimonyMeeting] =
-		React.useState<boolean>(isFirstSundayOfMonth);
+		React.useState<boolean>(isNextSundayFirstOfMonth());
 	const storeData = useSyncExternalStore(
 		agendaStore.subscribe,
 		agendaStore.getSnapshot,
