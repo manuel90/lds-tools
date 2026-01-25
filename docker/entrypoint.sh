@@ -5,9 +5,9 @@ if [ ! -d node_modules ] && [ -f package.json ] ; then
     npm install
 fi
 
-tail -f /dev/null
+#tail -f /dev/null
 
 # Running the tests
-#npm run test
+npm run test
 
-#npm run dev
+npm run dev

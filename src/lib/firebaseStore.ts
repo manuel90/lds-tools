@@ -9,6 +9,7 @@ import {
 
 import { ProgramFormData } from "@/interfaces";
 import { db } from "@/lib/firebase";
+import { isFirstSundayOfMonth } from "@/utils/fillAgendaPdf";
 
 const INITIAL_SERVER_SNAPSHOT: Partial<ProgramFormData> = {
 	presiding: "",

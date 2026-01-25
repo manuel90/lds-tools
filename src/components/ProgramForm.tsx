@@ -10,9 +10,15 @@ import {
 	Box,
 	Stack,
 	Divider,
+	Switch,
+	FormControlLabel,
 } from "@mui/material";
 
-import { fillAgendaPdf, getNextSundayFormatted } from "@/utils/fillAgendaPdf";
+import {
+	fillAgendaPdf,
+	getNextSundayFormatted,
+	isFirstSundayOfMonth,
+} from "@/utils/fillAgendaPdf";
 
 import { ProgramFormData } from "@/interfaces";
 
@@ -21,6 +27,8 @@ import { createFirestoreStore } from "@/lib/firebaseStore";
 const agendaStore = createFirestoreStore();
 
 const ProgramForm: React.FC = () => {
+	const [isFastTestimonyMeeting, setIsFastTestimonyMeeting] =
+		React.useState<boolean>(isFirstSundayOfMonth);
 	const storeData = useSyncExternalStore(
 		agendaStore.subscribe,
 		agendaStore.getSnapshot,
@@ -42,10 +50,14 @@ const ProgramForm: React.FC = () => {
 	const onSubmit = async (data: ProgramFormData) => {
 		await agendaStore.updateData(data);
 
-		await fillAgendaPdf(data);
+		await fillAgendaPdf(data, isFastTestimonyMeeting);
 	};
 
-	const renderField = (name: keyof ProgramFormData, label: string) => (
+	const renderField = (
+		name: keyof ProgramFormData,
+		label: string,
+		disabled: boolean = false,
+	) => (
 		<TextField
 			{...register(name)}
 			label={label}
@@ -54,6 +66,7 @@ const ProgramForm: React.FC = () => {
 			error={!!errors[name]}
 			helperText={errors[name]?.message}
 			slotProps={{ inputLabel: { shrink: true } }}
+			disabled={disabled}
 		/>
 	);
 
@@ -86,7 +99,18 @@ const ProgramForm: React.FC = () => {
 			</Box>
 
 			<form onSubmit={handleSubmit(onSubmit)}>
-				{/* Stack replaces Grid and manages vertical spacing (spacing={2} = 16px) */}
+				<FormControlLabel
+					sx={{ mb: 2 }}
+					control={
+						<Switch
+							checked={isFastTestimonyMeeting}
+							onChange={(e) => {
+								setIsFastTestimonyMeeting(e.target.checked);
+							}}
+						/>
+					}
+					label="Reunión de ayuno y testimonio"
+				/>
 				<Stack spacing={2}>
 					<Typography variant="overline" color="primary" sx={{ mt: 1 }}>
 						Liderazgo
@@ -110,12 +134,15 @@ const ProgramForm: React.FC = () => {
 					<Typography variant="overline" color="primary">
 						Discursantes
 					</Typography>
-					{renderField("speaker1", "Discursante 1")}
-					{renderField("speaker2", "Discursante 2")}
-					{renderField("intermediate_hymn", "Himno Especial")}
-					{renderField("speaker3", "Discursante 3")}
-					{renderField("speaker4", "Discursante 4")}
-
+					{renderField("speaker1", "Discursante 1", isFastTestimonyMeeting)}
+					{renderField("speaker2", "Discursante 2", isFastTestimonyMeeting)}
+					{renderField(
+						"intermediate_hymn",
+						"Himno Especial",
+						isFastTestimonyMeeting,
+					)}
+					{renderField("speaker3", "Discursante 3", isFastTestimonyMeeting)}
+					{renderField("speaker4", "Discursante 4", isFastTestimonyMeeting)}
 					<Divider />
 
 					<Typography variant="overline" color="primary">

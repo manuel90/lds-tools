@@ -98,8 +98,13 @@ const BENEDICTION_POSITION = {
 	size: 11,
 };
 
-export const fillAgendaPdf = async (data: ProgramFormData) => {
-	const pdfUrl = getAssetPath("agenda.pdf");
+export const fillAgendaPdf = async (
+	data: ProgramFormData,
+	isFastTestimonyMeeting: boolean,
+) => {
+	const pdfUrl = getAssetPath(
+		isFastTestimonyMeeting ? "agenda_fast.pdf" : "agenda.pdf",
+	);
 
 	const res = await fetch(pdfUrl);
 	const buffer = await res.arrayBuffer();
@@ -126,7 +131,12 @@ export const fillAgendaPdf = async (data: ProgramFormData) => {
 	page1.drawText(data.organist || "", { font, ...ORGANIST_POSITION });
 	page1.drawText(data.chorister || "", { font, ...CHORISTER_POSITION });
 	page1.drawText(data.invocation || "", { font, ...INVOCATION_POSITION });
-	page2.drawText(data.benediction || "", { font, ...BENEDICTION_POSITION });
+	page2.drawText(
+		data.benediction || "",
+		isFastTestimonyMeeting
+			? { font, ...BENEDICTION_POSITION, y: BENEDICTION_POSITION.y + 25 }
+			: { font, ...BENEDICTION_POSITION },
+	);
 
 	// ==== HYMNS ====
 	page1.drawText(data.opening_hymn || "", { font, ...OPENING_HYMN_POSITION });
@@ -134,33 +144,43 @@ export const fillAgendaPdf = async (data: ProgramFormData) => {
 		font,
 		...SACRAMENT_HYMN_POSITION,
 	});
-	page2.drawText(data.intermediate_hymn || "", {
-		font,
-		...INTERMEDIATE_HYMN_POSITION,
-	});
-	page2.drawText(data.closing_hymn || "", { font, ...CLOSING_HYMN_POSITION });
+	if (!isFastTestimonyMeeting) {
+		page2.drawText(data.intermediate_hymn || "", {
+			font,
+			...INTERMEDIATE_HYMN_POSITION,
+		});
+	}
+	page2.drawText(
+		data.closing_hymn || "",
+		isFastTestimonyMeeting
+			? { font, ...CLOSING_HYMN_POSITION, y: CLOSING_HYMN_POSITION.y + 25 }
+			: { font, ...CLOSING_HYMN_POSITION },
+	);
 
-	// ==== SPEAKERS ====
-	page2.drawText(data.speaker1 || "", { font, ...SPEAKER1_POSITION });
-	page2.drawText(data.speaker2 || "", { font, ...SPEAKER2_POSITION });
-	page2.drawText(data.speaker3 || "", { font, ...SPEAKER3_POSITION });
-	page2.drawText(data.speaker4 || "", { font, ...SPEAKER4_POSITION });
-
+	if (!isFastTestimonyMeeting) {
+		// ==== SPEAKERS ====
+		page2.drawText(data.speaker1 || "", { font, ...SPEAKER1_POSITION });
+		page2.drawText(data.speaker2 || "", { font, ...SPEAKER2_POSITION });
+		page2.drawText(data.speaker3 || "", { font, ...SPEAKER3_POSITION });
+		page2.drawText(data.speaker4 || "", { font, ...SPEAKER4_POSITION });
+	}
 	const pdfBytes = await pdfDoc.save();
 	const uint8PdfBytes = new Uint8Array(pdfBytes as unknown as ArrayBuffer);
 	const blob = new Blob([uint8PdfBytes], { type: "application/pdf" });
 
 	const link = document.createElement("a");
 	link.href = URL.createObjectURL(blob);
-	link.download = "agenda-editada.pdf";
+	link.download = `agenda-editada__${getNextSundayFormatted().replace(/ /g, "_")}.pdf`;
 	link.click();
 };
 
 export function getNextSundayFormatted() {
 	const nextCalendarSunday = new Date();
-	nextCalendarSunday.setDate(
-		nextCalendarSunday.getDate() + ((7 - nextCalendarSunday.getDay()) % 7 || 7),
-	);
+
+	const day = nextCalendarSunday.getDay(); // 0 = Sunday
+	const daysToAdd = day === 0 ? 0 : 7 - day;
+
+	nextCalendarSunday.setDate(nextCalendarSunday.getDate() + daysToAdd);
 	const options: Intl.DateTimeFormatOptions = {
 		day: "2-digit",
 		month: "long",
@@ -173,4 +193,11 @@ export function getNextSundayFormatted() {
 export function getAssetPath(path: string) {
 	const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
 	return `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
+export function isFirstSundayOfMonth() {
+	const day = new Date().getDay(); // 0 = Sunday
+	const dateOfMonth = new Date().getDate();
+
+	return day === 0 && dateOfMonth <= 7;
 }
