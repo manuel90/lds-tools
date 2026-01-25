@@ -2,14 +2,12 @@ import {
 	doc,
 	onSnapshot,
 	updateDoc,
-	Firestore,
 	addDoc,
 	collection,
 } from "firebase/firestore";
 
 import { ProgramFormData } from "@/interfaces";
 import { db } from "@/lib/firebase";
-import { isFirstSundayOfMonth } from "@/utils/fillAgendaPdf";
 
 const INITIAL_SERVER_SNAPSHOT: Partial<ProgramFormData> = {
 	presiding: "",
