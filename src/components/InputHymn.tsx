@@ -11,12 +11,14 @@ import { get } from "http";
 type InputHymnProps = {
 	label: string;
 	songNumber: string;
+	disabled?: boolean;
 	onChange: (newSongNumber: string) => void;
 };
 
 const InputHymn: React.FC<InputHymnProps> = ({
 	label,
 	songNumber,
+	disabled = false,
 	onChange,
 }) => {
 	const [open, setOpen] = useState(false);
@@ -52,6 +54,7 @@ const InputHymn: React.FC<InputHymnProps> = ({
 			<Autocomplete
 				key={songNumber}
 				open={open}
+				disabled={disabled}
 				onOpen={handleOpen}
 				onClose={handleClose}
 				value={getHymnByNumber(value)}

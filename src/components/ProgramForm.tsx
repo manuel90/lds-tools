@@ -100,10 +100,15 @@ const ProgramForm: React.FC = () => {
 		/>
 	);
 
-	const renderHymnField = (name: keyof ProgramFormData, label: string) => (
+	const renderHymnField = (
+		name: keyof ProgramFormData,
+		label: string,
+		disabled: boolean = false,
+	) => (
 		<InputHymn
 			label={label}
 			songNumber={formData[name] || ""}
+			disabled={disabled}
 			onChange={(newSongNumber) => {
 				setValue(name, newSongNumber || "", { shouldDirty: true });
 				trigger([name]);
@@ -201,7 +206,7 @@ const ProgramForm: React.FC = () => {
 						</Typography>
 						{renderField("speaker1", "Discursante 1", isFastTestimonyMeeting)}
 						{renderField("speaker2", "Discursante 2", isFastTestimonyMeeting)}
-						{renderField(
+						{renderHymnField(
 							"intermediate_hymn",
 							"Himno Especial",
 							isFastTestimonyMeeting,
