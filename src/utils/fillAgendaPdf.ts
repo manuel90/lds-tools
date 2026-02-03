@@ -2,6 +2,24 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 
 import { ProgramFormData } from "@/interfaces";
 
+const WARD_NAME_POSITION = {
+	x: 135,
+	y: 715,
+	size: 11,
+};
+
+const BLESSING_PRIESTHOOD_POSITION = {
+	x: 215,
+	y: 115,
+	size: 11,
+};
+
+const DISTRIBUTE_PRIESTHOOD_POSITION = {
+	x: 205,
+	y: 90,
+	size: 11,
+};
+
 const DATE_POSITION = {
 	x: 355,
 	y: 730,
@@ -123,7 +141,8 @@ export const fillAgendaPdf = async (
 	// ==== DATE AND HOUR ====
 
 	page1.drawText(getNextSundayFormatted(), { font, ...DATE_POSITION });
-	page1.drawText("9:00 AM", { font, ...HOUR_POSITION });
+	page1.drawText(data.ward || "", { font, ...WARD_NAME_POSITION });
+	page1.drawText(data.hour || "", { font, ...HOUR_POSITION });
 
 	// ==== PARTICIPANTS ====
 	page1.drawText(data.presiding || "", { font, ...PRESIDING_POSITION });
@@ -138,12 +157,22 @@ export const fillAgendaPdf = async (
 			: { font, ...BENEDICTION_POSITION },
 	);
 
-	// ==== HYMNS ====
-	page1.drawText(data.opening_hymn || "", { font, ...OPENING_HYMN_POSITION });
+	// ==== SACRAMENT ====
 	page1.drawText(data.sacrament_hymn || "", {
 		font,
 		...SACRAMENT_HYMN_POSITION,
 	});
+	page1.drawText(data.priesthood_blessing || "", {
+		font,
+		...BLESSING_PRIESTHOOD_POSITION,
+	});
+	page1.drawText(data.priesthood_distribution || "", {
+		font,
+		...DISTRIBUTE_PRIESTHOOD_POSITION,
+	});
+
+	// ==== HYMNS ====
+	page1.drawText(data.opening_hymn || "", { font, ...OPENING_HYMN_POSITION });
 	if (!isFastTestimonyMeeting) {
 		page2.drawText(data.intermediate_hymn || "", {
 			font,

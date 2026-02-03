@@ -8,6 +8,7 @@ import {
 
 import { ProgramFormData } from "@/interfaces";
 import { db } from "@/lib/firebase";
+import { LocalStore } from "@/lib/LocalStore";
 
 const INITIAL_SERVER_SNAPSHOT: Partial<ProgramFormData> = {
 	presiding: "",
@@ -27,7 +28,22 @@ const INITIAL_SERVER_SNAPSHOT: Partial<ProgramFormData> = {
 };
 
 export const createFirestoreStore = () => {
-	const docId = process.env.NEXT_PUBLIC_DOC_ID || "";
+	const docId = LocalStore.get("ward_number")
+		? "ward-" + LocalStore.get("ward_number")
+		: "";
+	if (!docId) {
+		return {
+			subscribe: (_: () => void) => () => {},
+			getSnapshot: () => INITIAL_SERVER_SNAPSHOT,
+			getServerSnapshot: () => INITIAL_SERVER_SNAPSHOT,
+			updateData: async (_: ProgramFormData) => {
+				throw new Error("Número de unidad no válido");
+			},
+			addData: async (_: ProgramFormData) => {
+				throw new Error("Número de unidad no válido");
+			},
+		};
+	}
 	const collectionName = process.env.NEXT_PUBLIC_COLLECTION_NAME || "";
 
 	let snapshot: Partial<ProgramFormData> = INITIAL_SERVER_SNAPSHOT;
@@ -36,12 +52,16 @@ export const createFirestoreStore = () => {
 	const subscribe = (callback: () => void) => {
 		const docRef = doc(db, collectionName, docId);
 
-		const unsubscribeFirestore = onSnapshot(docRef, (docSnap) => {
-			if (docSnap.exists()) {
-				snapshot = docSnap.data() as ProgramFormData;
-			}
-			listeners.forEach((l) => l());
-		});
+		const unsubscribeFirestore = onSnapshot(
+			docRef,
+			(docSnap) => {
+				if (docSnap.exists()) {
+					snapshot = docSnap.data() as ProgramFormData;
+				}
+				listeners.forEach((l) => l());
+			},
+			(error) => {},
+		);
 
 		listeners.add(callback);
 
@@ -56,15 +76,9 @@ export const createFirestoreStore = () => {
 	const getServerSnapshot = () => INITIAL_SERVER_SNAPSHOT;
 
 	const updateData = async (newData: ProgramFormData) => {
-		try {
-			const docRef = doc(db, collectionName, docId);
-			// We cast to any here because updateDoc is picky about custom interfaces
-			await updateDoc(docRef, newData as any);
-			return true;
-		} catch (error) {
-			console.error("Error updating document:", error);
-			return false;
-		}
+		const docRef = doc(db, collectionName, docId);
+		// We cast to any here because updateDoc is picky about custom interfaces
+		await updateDoc(docRef, newData as any);
 	};
 
 	const addData = async (data: ProgramFormData) => {

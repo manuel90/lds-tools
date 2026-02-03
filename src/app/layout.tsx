@@ -16,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
 	title: "Generador de Agenda Sacramental",
-	description: "Generado por create next app",
+	description:
+		"Genera agendas sacramentales en PDF de forma rápida y sencilla.",
 };
 
 export default function RootLayout({
@@ -25,7 +26,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
+		<html lang="es">
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>

@@ -36,7 +36,6 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
           NEXT_PUBLIC_COLLECTION_NAME: ${{ secrets.NEXT_PUBLIC_COLLECTION_NAME }}
-          NEXT_PUBLIC_DOC_ID: ${{ secrets.NEXT_PUBLIC_DOC_ID }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
