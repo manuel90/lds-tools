@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts } from "pdf-lib";
 
 import { ProgramFormData } from "@/interfaces";
+import { getHymnByNumber } from "./hymnsFetch";
 
 const WARD_NAME_POSITION = {
 	x: 135,
@@ -76,7 +77,7 @@ const SACRAMENT_HYMN_POSITION = {
 
 const SPEAKER1_POSITION = {
 	x: 130,
-	y: 745,
+	y: 740,
 	size: 11,
 };
 
@@ -158,10 +159,15 @@ export const fillAgendaPdf = async (
 	);
 
 	// ==== SACRAMENT ====
-	page1.drawText(data.sacrament_hymn || "", {
-		font,
-		...SACRAMENT_HYMN_POSITION,
-	});
+	page1.drawText(
+		(data.sacrament_hymn || "") +
+			" - " +
+			getHymnByNumber(data.sacrament_hymn)?.title || "",
+		{
+			font,
+			...SACRAMENT_HYMN_POSITION,
+		},
+	);
 	page1.drawText(data.priesthood_blessing || "", {
 		font,
 		...BLESSING_PRIESTHOOD_POSITION,
@@ -172,15 +178,30 @@ export const fillAgendaPdf = async (
 	});
 
 	// ==== HYMNS ====
-	page1.drawText(data.opening_hymn || "", { font, ...OPENING_HYMN_POSITION });
-	if (!isFastTestimonyMeeting) {
-		page2.drawText(data.intermediate_hymn || "", {
+	page1.drawText(
+		(data.opening_hymn || "") +
+			" - " +
+			getHymnByNumber(data.opening_hymn)?.title || "",
+		{
 			font,
-			...INTERMEDIATE_HYMN_POSITION,
-		});
+			...OPENING_HYMN_POSITION,
+		},
+	);
+	if (!isFastTestimonyMeeting) {
+		page2.drawText(
+			(data.intermediate_hymn || "") +
+				" - " +
+				getHymnByNumber(data.intermediate_hymn)?.title || "",
+			{
+				font,
+				...INTERMEDIATE_HYMN_POSITION,
+			},
+		);
 	}
 	page2.drawText(
-		data.closing_hymn || "",
+		(data.closing_hymn || "") +
+			" - " +
+			getHymnByNumber(data.closing_hymn)?.title || "",
 		isFastTestimonyMeeting
 			? { font, ...CLOSING_HYMN_POSITION, y: CLOSING_HYMN_POSITION.y + 25 }
 			: { font, ...CLOSING_HYMN_POSITION },
