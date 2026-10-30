@@ -5,6 +5,7 @@ export class LocalStore {
 	 * @param value The data to store (will be stringified).
 	 */
 	static set<T>(key: string, value: T): void {
+		if (typeof window === "undefined" || !window.localStorage) return;
 		try {
 			const serializedValue = JSON.stringify(value);
 			localStorage.setItem(key, serializedValue);
@@ -19,6 +20,7 @@ export class LocalStore {
 	 * @returns The parsed data or null if not found.
 	 */
 	static get<T>(key: string): T | null {
+		if (typeof window === "undefined" || !window.localStorage) return null;
 		try {
 			const serializedValue = localStorage.getItem(key);
 			if (serializedValue === null) return null;
@@ -33,13 +35,23 @@ export class LocalStore {
 	 * Removes a specific item.
 	 */
 	static remove(key: string): void {
-		localStorage.removeItem(key);
+		if (typeof window === "undefined" || !window.localStorage) return;
+		try {
+			localStorage.removeItem(key);
+		} catch (error) {
+			console.error(`Error removing from localStorage: ${key}`, error);
+		}
 	}
 
 	/**
 	 * Clears all data in localStorage.
 	 */
 	static clear(): void {
-		localStorage.clear();
+		if (typeof window === "undefined" || !window.localStorage) return;
+		try {
+			localStorage.clear();
+		} catch (error) {
+			console.error(`Error clearing localStorage`, error);
+		}
 	}
 }

@@ -1,6 +1,14 @@
 "use client";
 
-import React, { useEffect, useSyncExternalStore } from "react";
+import React, {
+	useState,
+	useEffect,
+	useRef,
+	useCallback,
+	useSyncExternalStore,
+	type FC,
+	type MouseEvent,
+} from "react";
 import { useForm } from "react-hook-form";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
@@ -11,6 +19,9 @@ import Divider from "@mui/material/Divider";
 import Switch from "@mui/material/Switch";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import CloudDoneIcon from "@mui/icons-material/CloudDone";
+import DevicesIcon from "@mui/icons-material/Devices";
 
 import { Id, toast } from "react-toastify";
 
@@ -30,16 +41,28 @@ import InputHymn from "./InputHymn";
 
 const agendaStore = createFirestoreStore();
 
-const ProgramForm: React.FC = () => {
+const ProgramForm: FC = () => {
+	const [mounted, setMounted] = useState<boolean>(false);
 	const [isFastTestimonyMeeting, setIsFastTestimonyMeeting] =
-		React.useState<boolean>(isNextSundayFirstOfMonth());
-	const [modalKey, setModalKey] = React.useState<number>(0);
-	const refToastId = React.useRef<Id>("");
+		useState<boolean>(isNextSundayFirstOfMonth());
+	const [modalOpen, setModalOpen] = useState<boolean>(false);
+	const [wardNumber, setWardNumber] = useState<string | null>(null);
+	const refToastId = useRef<Id>("");
 	const storeData = useSyncExternalStore(
 		agendaStore.subscribe,
 		agendaStore.getSnapshot,
 		agendaStore.getServerSnapshot,
 	);
+
+	useEffect(() => {
+		setMounted(true);
+		const ward = LocalStore.get<string>("ward_number");
+		setWardNumber(ward);
+		const dismissed = LocalStore.get<boolean>("ward_prompt_dismissed");
+		if (!ward && !dismissed) {
+			setModalOpen(true);
+		}
+	}, []);
 
 	const {
 		register,
@@ -53,67 +76,74 @@ const ProgramForm: React.FC = () => {
 		defaultValues: storeData,
 	});
 
-	const refTimerAlert = React.useRef<NodeJS.Timeout | null>(null);
+	const refTimerAlert = useRef<NodeJS.Timeout | null>(null);
 
 	const formData = watch();
 
-	const onChangeModalKey = (
-		e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-	) => {
-		e.preventDefault();
-		LocalStore.set("ward_number", "");
-		setModalKey((prevKey) => prevKey + 1);
-		toast.dismiss(refToastId.current);
-	};
+	const onChangeModalKey = useCallback(
+		(e?: MouseEvent<HTMLElement>) => {
+			e?.preventDefault();
+			setModalOpen(true);
+			toast.dismiss(refToastId.current);
+		},
+		[],
+	);
 
 	const onSubmit = async (data: ProgramFormData) => {
 		try {
 			await agendaStore.updateData(data);
-
 			await fillAgendaPdf(data, isFastTestimonyMeeting);
+			toast.success("¡Agenda generada exitosamente!");
 		} catch (error) {
+			console.error("Error generating agenda:", error);
 			refToastId.current = toast.error(
 				<p>
-					Número de unidad no válido.{" "}
+					Error al procesar la agenda.{" "}
 					<a href="#" onClick={onChangeModalKey}>
-						Cambiar
+						Configurar unidad
 					</a>
 				</p>,
 			);
 		}
 	};
 
-	const renderField = (
-		name: keyof ProgramFormData,
-		label: string,
-		disabled: boolean = false,
-	) => (
-		<TextField
-			{...register(name)}
-			label={label}
-			fullWidth
-			size="small"
-			error={!!errors[name]}
-			helperText={errors[name]?.message}
-			slotProps={{ inputLabel: { shrink: true } }}
-			disabled={disabled}
-		/>
+	const renderField = useCallback(
+		(
+			name: keyof ProgramFormData,
+			label: string,
+			disabled: boolean = false,
+		) => (
+			<TextField
+				{...register(name)}
+				label={label}
+				fullWidth
+				size="small"
+				error={!!errors[name]}
+				helperText={errors[name]?.message}
+				slotProps={{ inputLabel: { shrink: true } }}
+				disabled={disabled}
+			/>
+		),
+		[errors, register],
 	);
 
-	const renderHymnField = (
-		name: keyof ProgramFormData,
-		label: string,
-		disabled: boolean = false,
-	) => (
-		<InputHymn
-			label={label}
-			songNumber={formData[name] || ""}
-			disabled={disabled}
-			onChange={(newSongNumber) => {
-				setValue(name, newSongNumber || "", { shouldDirty: true });
-				trigger([name]);
-			}}
-		/>
+	const renderHymnField = useCallback(
+		(
+			name: keyof ProgramFormData,
+			label: string,
+			disabled: boolean = false,
+		) => (
+			<InputHymn
+				label={label}
+				songNumber={formData[name] || ""}
+				disabled={disabled}
+				onChange={(newSongNumber) => {
+					setValue(name, newSongNumber || "", { shouldDirty: true });
+					trigger([name]);
+				}}
+			/>
+		),
+		[formData, setValue, trigger],
 	);
 
 	useEffect(() => {
@@ -132,9 +162,12 @@ const ProgramForm: React.FC = () => {
 					clearTimeout(refTimerAlert.current);
 				}
 				await agendaStore.updateData(formData);
-				refTimerAlert.current = setTimeout(() => {
-					toast.info("Cambios guardados automáticamente");
-				}, 5000);
+				// Only show auto-save notification when syncing with remote unit, not when saving locally
+				if (wardNumber) {
+					refTimerAlert.current = setTimeout(() => {
+						toast.info("Cambios guardados automáticamente");
+					}, 5000);
+				}
 			} catch (error) {}
 		}, 900);
 
@@ -144,17 +177,45 @@ const ProgramForm: React.FC = () => {
 				clearTimeout(refTimerAlert.current);
 			}
 		};
-	}, [formData, isDirty]);
+	}, [formData, isDirty, wardNumber]);
 
 	return (
 		<>
 			<Paper elevation={3} sx={{ p: 4, maxWidth: 600, mx: "auto", mt: 4 }}>
 				<Box sx={{ mb: 3 }}>
-					<Typography variant="h5" sx={{ fontWeight: "bold" }}>
-						Agenda Sacramental
-					</Typography>
+					<Box
+						sx={{
+							display: "flex",
+							justifyContent: "space-between",
+							alignItems: "flex-start",
+							mb: 0.5,
+						}}
+					>
+						<Typography variant="h5" sx={{ fontWeight: "bold" }}>
+							Agenda Sacramental
+						</Typography>
+						{mounted ? (
+							<Chip
+								size="small"
+								color={wardNumber ? "primary" : "default"}
+								variant="outlined"
+								icon={
+									wardNumber ? (
+										<CloudDoneIcon fontSize="small" />
+									) : (
+										<DevicesIcon fontSize="small" />
+									)
+								}
+								label={wardNumber ? `Unidad #${wardNumber}` : "Modo Local"}
+								onClick={() => setModalOpen(true)}
+								sx={{ cursor: "pointer", fontWeight: 500 }}
+							/>
+						) : (
+							<Box sx={{ width: 115, height: 24 }} />
+						)}
+					</Box>
 					<Typography variant="body2" color="text.secondary">
-						Próximo domingo: <b>{getNextSundayFormatted()}</b>
+						Próximo domingo: <b suppressHydrationWarning>{getNextSundayFormatted()}</b>
 					</Typography>
 				</Box>
 
@@ -229,7 +290,13 @@ const ProgramForm: React.FC = () => {
 					</Stack>
 				</form>
 			</Paper>
-			<ModalEnterWardNumber key={modalKey} />
+			<ModalEnterWardNumber
+				open={modalOpen}
+				onClose={() => {
+					setModalOpen(false);
+					setWardNumber(LocalStore.get<string>("ward_number"));
+				}}
+			/>
 		</>
 	);
 };
