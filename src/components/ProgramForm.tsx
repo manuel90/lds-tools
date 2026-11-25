@@ -168,7 +168,7 @@ const ProgramForm: FC = () => {
 						toast.info("Cambios guardados automáticamente");
 					}, 5000);
 				}
-			} catch (error) {}
+			} catch {}
 		}, 900);
 
 		return () => {

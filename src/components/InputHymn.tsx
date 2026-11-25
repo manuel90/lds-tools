@@ -1,12 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import Autocomplete from "@mui/material/Autocomplete";
-import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import { fetchHymns, getHymnByNumber } from "@/utils/hymnsFetch";
 
 import { Hymn } from "@/interfaces";
-import { get } from "http";
 
 type InputHymnProps = {
 	label: string;
@@ -23,11 +21,6 @@ const InputHymn: React.FC<InputHymnProps> = ({
 }) => {
 	const [open, setOpen] = useState(false);
 	const [options, setOptions] = useState<Hymn[]>([]);
-	const [loading, setLoading] = useState(false);
-
-	const hymn = getHymnByNumber(songNumber);
-	const [value, setValue] = useState("");
-	const defValue = `${songNumber} - ${hymn?.title}` || "";
 
 	const handleOpen = () => {
 		setOpen(true);
@@ -40,15 +33,6 @@ const InputHymn: React.FC<InputHymnProps> = ({
 		setOptions([]);
 	};
 
-	useEffect(() => {
-		if (songNumber) {
-			const foundHymn = getHymnByNumber(songNumber);
-			setValue(foundHymn?.songNumber || "");
-		} else {
-			setValue("");
-		}
-	}, [songNumber]);
-
 	return (
 		<div>
 			<Autocomplete
@@ -57,7 +41,7 @@ const InputHymn: React.FC<InputHymnProps> = ({
 				disabled={disabled}
 				onOpen={handleOpen}
 				onClose={handleClose}
-				value={getHymnByNumber(value)}
+				value={getHymnByNumber(songNumber)}
 				isOptionEqualToValue={(option, value) => {
 					return value ? option.songNumber === value.songNumber : false;
 				}}
@@ -67,10 +51,8 @@ const InputHymn: React.FC<InputHymnProps> = ({
 				onChange={(_, newValue) => {
 					const hymnVal = newValue?.songNumber || "";
 					onChange(hymnVal);
-					setValue(hymnVal);
 				}}
 				options={options}
-				loading={loading}
 				renderInput={(params) => (
 					<TextField
 						{...params}
@@ -79,17 +61,6 @@ const InputHymn: React.FC<InputHymnProps> = ({
 						size="small"
 						slotProps={{
 							inputLabel: { shrink: true },
-							input: {
-								...params.InputProps,
-								endAdornment: (
-									<>
-										{loading ? (
-											<CircularProgress color="inherit" size={20} />
-										) : null}
-										{params.InputProps.endAdornment}
-									</>
-								),
-							},
 						}}
 					/>
 				)}

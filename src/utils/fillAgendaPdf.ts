@@ -159,10 +159,11 @@ export const fillAgendaPdf = async (
 	);
 
 	// ==== SACRAMENT ====
+	const sacramentHymn = getHymnByNumber(data.sacrament_hymn);
 	page1.drawText(
-		(data.sacrament_hymn || "") +
-			" - " +
-			getHymnByNumber(data.sacrament_hymn)?.title || "",
+		sacramentHymn
+			? `${sacramentHymn.songNumber} - ${sacramentHymn.title}`
+			: data.sacrament_hymn || "",
 		{
 			font,
 			...SACRAMENT_HYMN_POSITION,
@@ -178,30 +179,33 @@ export const fillAgendaPdf = async (
 	});
 
 	// ==== HYMNS ====
+	const openingHymn = getHymnByNumber(data.opening_hymn);
 	page1.drawText(
-		(data.opening_hymn || "") +
-			" - " +
-			getHymnByNumber(data.opening_hymn)?.title || "",
+		openingHymn
+			? `${openingHymn.songNumber} - ${openingHymn.title}`
+			: data.opening_hymn || "",
 		{
 			font,
 			...OPENING_HYMN_POSITION,
 		},
 	);
 	if (!isFastTestimonyMeeting) {
+		const intermediateHymn = getHymnByNumber(data.intermediate_hymn);
 		page2.drawText(
-			(data.intermediate_hymn || "") +
-				" - " +
-				getHymnByNumber(data.intermediate_hymn)?.title || "",
+			intermediateHymn
+				? `${intermediateHymn.songNumber} - ${intermediateHymn.title}`
+				: data.intermediate_hymn || "",
 			{
 				font,
 				...INTERMEDIATE_HYMN_POSITION,
 			},
 		);
 	}
+	const closingHymn = getHymnByNumber(data.closing_hymn);
 	page2.drawText(
-		(data.closing_hymn || "") +
-			" - " +
-			getHymnByNumber(data.closing_hymn)?.title || "",
+		closingHymn
+			? `${closingHymn.songNumber} - ${closingHymn.title}`
+			: data.closing_hymn || "",
 		isFastTestimonyMeeting
 			? { font, ...CLOSING_HYMN_POSITION, y: CLOSING_HYMN_POSITION.y + 25 }
 			: { font, ...CLOSING_HYMN_POSITION },

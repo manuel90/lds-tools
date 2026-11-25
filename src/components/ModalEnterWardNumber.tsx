@@ -6,7 +6,6 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
-import Box from "@mui/material/Box";
 import CloudQueueIcon from "@mui/icons-material/CloudQueue";
 import DevicesIcon from "@mui/icons-material/Devices";
 import { toast } from "react-toastify";
@@ -24,7 +23,13 @@ const ModalEnterWardNumber: React.FC<ModalEnterWardNumberProps> = ({
 	open: propOpen,
 	onClose: propOnClose,
 }) => {
-	const [internalOpen, setInternalOpen] = useState(false);
+	const [internalOpen, setInternalOpen] = useState(() => {
+		if (propOpen !== undefined) return false;
+		if (typeof window === "undefined") return false;
+		const ward = LocalStore.get<string>("ward_number");
+		const dismissed = LocalStore.get<boolean>("ward_prompt_dismissed");
+		return !ward && !dismissed;
+	});
 	const isControlled = propOpen !== undefined;
 	const isOpen = isControlled ? propOpen : internalOpen;
 
@@ -42,16 +47,6 @@ const ModalEnterWardNumber: React.FC<ModalEnterWardNumberProps> = ({
 	useEffect(() => {
 		setValue("ward_number", LocalStore.get<string>("ward_number") || "");
 	}, [isOpen, setValue]);
-
-	useEffect(() => {
-		if (!isControlled) {
-			const ward = LocalStore.get<string>("ward_number");
-			const dismissed = LocalStore.get<boolean>("ward_prompt_dismissed");
-			if (!ward && !dismissed) {
-				setInternalOpen(true);
-			}
-		}
-	}, [isControlled]);
 
 	const handleClose = () => {
 		LocalStore.set("ward_prompt_dismissed", true);
